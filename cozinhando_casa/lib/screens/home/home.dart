@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import '../../models/receita.dart';
 
@@ -16,21 +18,29 @@ class HomeState extends State<Home> {
 
   Widget _construirHome() {
     return Scaffold(
-      body: _construirCard(),
+      body: _construirListaCard(),
       appBar: _construirAppBar(),
     );
   }
 
   Widget _construirListaCard() {
     return FutureBuilder(
-      future: DefaultAssetBundle
-          .of(context)
-          .loadString('assets/receitas.json'),
-      builder: ,
+      future: DefaultAssetBundle.of(context).loadString('assets/receitas.json'),
+      builder: (context, snapshot) {
+        List<dynamic> receitas = json.decode(snapshot.data.toString());
+
+        return ListView.builder(
+          itemBuilder: (BuildContext context, int index) {
+            Receita receita = Receita.fromJson(receitas[index]);
+            return _construirCard(receita.titulo, receita.foto);
+          },
+          itemCount: receitas == null ? 0 : receitas.length,
+        );
+      },
     );
   }
 
-  Widget _construirCard() {
+  Widget _construirCard(titulo, foto) {
     return SizedBox(
       height: 300,
       child: Card(
@@ -39,8 +49,9 @@ class HomeState extends State<Home> {
           children: [
             Stack(
               children: [
-                _construirImagemCard(),
-                _construirTextoCard(),
+                _construirImagemCard(foto),
+                _construirGradientCard(),
+                _construirTextoCard(titulo),
               ],
             )
           ],
@@ -49,20 +60,39 @@ class HomeState extends State<Home> {
     );
   }
 
-  Widget _construirTextoCard() {
-    return Positioned(
-      bottom: 10,
-      left: 10,
-      child: Text(
-        'Bolo de laranja',
-        style: TextStyle(fontSize: 20),
+  Widget _construirGradientCard() {
+    return Container(
+      height: 268,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: FractionalOffset.topCenter,
+          end: FractionalOffset.bottomCenter,
+          colors: [
+            Colors.transparent,
+            Colors.deepOrange.withOpacity(0.7)
+          ]
+        )
       ),
     );
   }
 
-  Widget _construirImagemCard() {
-    return Image.network(
-      'https://amp.receitadevovo.com.br/wp-content/uploads/2020/10/bolo-de-trigo-fofinho.jpg',
+  Widget _construirTextoCard(titulo) {
+    return Positioned(
+      bottom: 10,
+      left: 10,
+      child: Text(
+        titulo,
+        style: TextStyle(
+          fontSize: 20,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _construirImagemCard(foto) {
+    return Image.asset(
+      foto,
       fit: BoxFit.fill,
       height: 268,
     );
